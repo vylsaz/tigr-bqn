@@ -1,30 +1,19 @@
 void ← {t ⇐ ""}
-char ← {t ⇐ "i8:c8", mk ⇐ @}
-u8   ← {t ⇐ "u8",  mk ⇐ 0}
-i32  ← {t ⇐ "i32", mk ⇐ 0}
-f32  ← {t ⇐ "f32", mk ⇐ 0}
-f64  ← {t ⇐ "f64", mk ⇐ 0}
+char ← {t ⇐ "i8:c8"}
+u8   ← {t ⇐ "u8"}
+i32  ← {t ⇐ "i32"}
+f32  ← {t ⇐ "f32"}
+f64  ← {t ⇐ "f64"}
 Ref ← <
 Deref ← >
-Ptr  ← {𝕊 x: {t ⇐ "*"∾x.t, mk ⇐ {void≡x? ⟨⟩; {Ref x.Mk 𝕩}}}}
-Out  ← {𝕊 x: {t ⇐ "&"∾x.t, mk ⇐ {void≡x? ⟨⟩; {Ref x.Mk 𝕩}}}}
-Array ← {w 𝕊 x: {
-    n ⇐ w, t ⇐ "["∾(•Fmt w)∾"]"∾x.t
-    Mk ⇐ {S @: w↑<x.Mk @; w↑𝕩}
-}}
+Ptr  ← {t ⇐ "*"∾𝕩.t}
+Out  ← {t ⇐ "&"∾𝕩.t}
+Array ← {n ⇐ 𝕨, t ⇐ "["∾(•Fmt 𝕨)∾"]"∾𝕩.t}
 Struct ← {𝕊 defs:
     [membs, types] ← ⍉>defs
-    n ← ≠defs
-    t ← "{"∾"}"∾˜¯1↓∾{𝕩.t∾","}¨types
-    Mk ← {
-    𝕊 @: {𝕩.Mk @}¨types;
-    𝕊 ns:
-        {memb‿type:
-            <{ns •ns.Has memb? ns •ns.Get memb; type.Mk @}
-        }¨defs
-    }
-    m ← •BQN "{t‿n‿mk ⇐ 𝕩, o ⇐ {"∾" ⇐ ↕n}}"∾˜¯1↓∾∾⟜"‿"¨membs
-    M t‿n‿mk
+    f ⇐ membs
+    t ⇐ "{"∾"}"∾˜¯1↓∾{𝕩.t∾","}¨types
+    Of ⇐ {o ← ⊑f⊐<𝕩, ("no field "∾•Fmt 𝕩)!o<≠f, o}
 }
 
 Of ← ⋈
@@ -54,7 +43,8 @@ _ffiWith_ ← {
 }
 
 tigrdll ← ({⟨⟩: ""; ⊑𝕩}•args)•file.At{
-"windows": "tigr.dll";
+    "windows": "tigr.dll";
+    "darwin": "libtigr.dylib";
     "libtigr.so"
 }•platform.os
 _ffi ⇐ {𝔽 _ffiWith_ tigrdll}
@@ -237,9 +227,9 @@ ToCstr ← {(•ToUTF8 𝕩)∾@}
 MakeBmp ← {𝕊 bmp:
     {
         bmp ⇐ bmp
-        W ⇐ {𝕊: tigr.o.w⊑bmp.Read 0}
-        H ⇐ {𝕊: tigr.o.h⊑bmp.Read 0}
-        Size ⇐ {𝕊: ⟨tigr.o.w, tigr.o.h⟩⊏bmp.Read 0}
+        W ⇐ {𝕊: "w"tigr.Of⊸⊑bmp.Read 0}
+        H ⇐ {𝕊: "h"tigr.Of⊸⊑bmp.Read 0}
+        Size ⇐ {𝕊: ⟨"w", "h"⟩tigr.Of¨⊸⊏bmp.Read 0}
 
         Closed ⇐ {𝕊: 0≠c.Closed bmp}
         Update ⇐ {𝕊: c.Update bmp}
