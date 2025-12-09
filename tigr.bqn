@@ -4,8 +4,6 @@ u8   ← {t ⇐ "u8"}
 i32  ← {t ⇐ "i32"}
 f32  ← {t ⇐ "f32"}
 f64  ← {t ⇐ "f64"}
-Ref ← <
-Deref ← >
 Ptr  ← {t ⇐ "*"∾𝕩.t}
 Out  ← {t ⇐ "&"∾𝕩.t}
 Array ← {n ⇐ 𝕨, t ⇐ "["∾(•Fmt 𝕨)∾"]"∾𝕩.t}
@@ -209,6 +207,8 @@ textHeight ⇐ i32 "tigrTextHeight"_ffi⟨font, Ptr char⟩
 
 mouse ⇐ void "tigrMouse"_ffi⟨bmp, Out i32, Out i32, Out i32⟩
 
+scrollWheel ⇐ void "tigrScrollWheel"_ffi⟨bmp, Out f32, Out f32⟩
+
 keyDown ⇐ i32 "tigrKeyDown"_ffi⟨bmp, i32⟩
 keyHeld ⇐ i32 "tigrKeyHeld"_ffi⟨bmp, i32⟩
 readChar ⇐ i32 "tigrReadChar"_ffi bmp
@@ -218,6 +218,8 @@ loadImageMem ⇐ bmp "tigrLoadImageMem"_ffi⟨Ptr char, i32⟩
 saveImage ⇐ i32 "tigrSaveImage"_ffi⟨Ptr char, bmp⟩
 
 time ⇐ f32 "tigrTime"_ffi @
+
+error ⇐ void "tigrError"_ffi⟨bmp, Ptr char, Ptr char⟩
 }
 
 Time ⇐ c.Time
@@ -255,7 +257,8 @@ MakeBmp ← {𝕊 bmp:
         BlitKeepAlpha  ⇐ {𝕊: c.BlitMode⟨bmp, keepAlpha⟩}
         BlitBlendAlpha ⇐ {𝕊: c.BlitMode⟨bmp, blendAlpha⟩}
 
-        Mouse ⇐ {𝕊: Deref˘c.Mouse⟨bmp, <0, <0, <0⟩}
+        Mouse ⇐ {𝕊: ⊑¨c.Mouse⟨bmp, <0, <0, <0⟩}
+        ScrollWheel ⇐ {𝕊: ⊑¨c.ScrollWheel⟨bmp, <0, <0⟩}
         KeyDown ⇐ {
             2=•Type 𝕩? 𝕊 𝕩-@;
             0≠c.KeyDown⟨bmp, 𝕩⟩
@@ -267,6 +270,8 @@ MakeBmp ← {𝕊 bmp:
         ReadChar ⇐ {𝕊: @+c.ReadChar bmp}
 
         SaveImage ⇐ {c.SaveImage⟨ToCstr 𝕩, bmp⟩}
+
+        Error ⇐ {c.Error⟨bmp, ToCstr"%s", ToCstr 𝕩⟩}
     }
 }
 Free ⇐ {c.Free 𝕩.bmp}
