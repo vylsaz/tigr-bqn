@@ -1,7 +1,9 @@
 void ← {t ⇐ ""}
 char ← {t ⇐ "i8:c8"}
 u8   ← {t ⇐ "u8"}
+i8   ← {t ⇐ "i8"}
 i32  ← {t ⇐ "i32"}
+u64  ← {t ⇐ "u64"}
 f32  ← {t ⇐ "f32"}
 f64  ← {t ⇐ "f64"}
 Ptr  ← {t ⇐ "*"∾𝕩.t}
@@ -13,6 +15,10 @@ Struct ← {𝕊 defs:
     t ⇐ "{"∾"}"∾˜¯1↓∾{𝕩.t∾","}¨types
     Of ⇐ {o ← ⊑f⊐<𝕩, ("no field "∾•Fmt 𝕩)!o<≠f, o}
 }
+
+asI8 ← {t ⇐ ":i8"}
+ptrSz ← 8
+null ← ptrSz⥊0
 
 Of ← ⋈
 
@@ -26,7 +32,7 @@ NewEnum ← {𝕊:
 }
 
 _ffiWith_ ← {
-    𝔽 _𝕣_ 𝔾 𝕩: void 𝕊 𝕩; 
+    𝔽 _𝕣_ 𝔾 𝕩: {t ⇐ "&"} 𝕊 𝕩; 
     n ← @≡𝕩
     s ← 0==𝕩
     r ← 𝕘 •FFI ⟨𝕨.t, 𝕗⟩∾{
@@ -65,13 +71,25 @@ Hex ⇐ {𝕊⁼ 𝕩: "#"∾⥊⊏⟜h˘⍉16(⌊∘÷˜≍|)𝕩;
     }≠h ↓˜↩ '#'≡⊑h
 }
 
-tigr ⇐ Struct ⟨
-    "w"Of i32, "h"Of i32
-    "cx"Of i32, "cy"Of i32, "cw"Of i32, "ch"Of i32
-    "pix"Of Ptr tPixel
-    "handle"Of Ptr void
-    "blitMode"Of i32
-⟩
+# tigr ⇐ Struct ⟨
+#     "w"Of i32, "h"Of i32
+#     "cx"Of i32, "cy"Of i32, "cw"Of i32, "ch"Of i32
+#     "pix"Of Ptr tPixel
+#     "handle"Of Ptr void
+#     "blitMode"Of i32
+# ⟩
+tigr ← asI8
+tigrOffset ← {
+    w ⇐ 0
+    h ⇐ 4
+    cx ⇐ 8
+    cy ⇐ 12
+    cw ⇐ 16
+    ch ⇐ 20
+    pix ⇐ 24
+    handle ⇐ 32
+    blitMode ⇐ 40
+}
 
 flag ⇐ {
     fixed ⇐ 0
@@ -236,12 +254,40 @@ Time ⇐ c.Time
 
 ToCstr ← {(•ToUTF8 𝕩)∾@}
 
+memcpyI32 ← "memcpy"_ffiWith_@ ⟨Out i32, Ptr asI8, u64⟩
+memcpyI8 ← "memcpy"_ffiWith_@ ⟨Out i8, Ptr asI8, u64⟩
+memcpyPixel ← "memcpy"_ffiWith_@ ⟨Out tPixel, Ptr asI8, u64⟩
+
+# From
+# https://github.com/mlochbaum/bqn-libs/blob/master/bignat.bqn
+base ← 2⋆8
+Carry ← {
+    b ← 𝕨 ⊣ 0           # Carry in
+    g ← 𝕩 ≥ base        # Generate
+    p ← 𝕩 = base-1      # Propagate
+    i ← ⌈`∘×⟜(1+↕∘≠)¬p  # Start index of propagation chain
+    a ← i ⊏ gs←b∾g      # Active propagations
+    c ← g ∨ p ∧ a       # Carry from these positions
+    r ← (𝕩 + b»c) - c×base
+    ⟨r, c⊸«⌾⋈b⟩
+}
+_extend ← { 𝕨 𝔽○((𝕨⌈○≠𝕩)⊸↑) 𝕩 }
+Add ← { 0⊸<◶⊣‿∾´ Carry 𝕨 +_extend 𝕩 }
+
+Offset ← {⟨ 8‿'c', 8‿'i' ⟩•bit._cast @+ 𝕨 Add base|𝕩}
+
 MakeBmp ← {𝕊 bmp:
+    !bmp ≢ null
     {
         bmp ⇐ bmp
-        W ⇐ {𝕊: "w"tigr.Of⊸⊑bmp.Read 0}
-        H ⇐ {𝕊: "h"tigr.Of⊸⊑bmp.Read 0}
-        Size ⇐ {𝕊: ⟨"w", "h"⟩tigr.Of¨⊸⊏bmp.Read 0}
+        W ⇐ {𝕊: ⊑MemcpyI32 ⟨<0, tigrOffset.w Offset bmp, 4⟩}
+        H ⇐ {𝕊: ⊑MemcpyI32 ⟨<0, tigrOffset.h Offset bmp, 4⟩}
+        Size ⇐ {𝕊: ⟨W@, H@⟩}
+        Pix ⇐ {𝕊:
+            ptr ← MemcpyI8 ⟨null, tigrOffset.pix Offset bmp, ptrSz⟩
+            w‿h ← Size @
+            h‿w⥊MemcpyPixel ⟨h‿w⥊<4⥊0, ptr, w×h×4⟩
+        }
 
         Closed ⇐ {𝕊: 0≠c.Closed bmp}
         Update ⇐ {𝕊: c.Update bmp}
@@ -279,7 +325,7 @@ MakeBmp ← {𝕊 bmp:
         }
         ReadChar ⇐ {𝕊: @+c.ReadChar bmp}
 
-        SaveImage ⇐ {c.SaveImage⟨ToCstr 𝕩, bmp⟩}
+        SaveImage ⇐ {0≠c.SaveImage⟨ToCstr 𝕩, bmp⟩}
 
         Error ⇐ {c.Error⟨bmp, ToCstr"%s", ToCstr 𝕩⟩}
     }
