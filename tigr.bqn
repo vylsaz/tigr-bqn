@@ -342,7 +342,7 @@ tfont ⇐ {
         rtld_now ← 2
         dlopen ← handle "dlopen"_ffiWith_@ ⟨Ptr char, i32⟩
         dlsym ← (Ptr c.font) "dlsym"_ffiWith_@ ⟨handle, Ptr char⟩
-        DlSym⟨DlOpen⟨tigrdll, rtld_now⟩, ToCstr"tfont"⟩
+        DlSym⟨DlOpen⟨ToCstr tigrdll, rtld_now⟩, ToCstr"tfont"⟩
     }•platform.os
     f ← p.Read 0
     {
