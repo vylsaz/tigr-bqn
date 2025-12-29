@@ -288,3 +288,8 @@ Returns the amount of time elapsed since tigrTime was last called, or zero on th
 bmp.Error message
 ```
 Displays an error message and quits.
+
+```bqn
+color ← tigr.Hex hexColor
+```
+Converts [css-style hex-color](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/hex-color) to color.
