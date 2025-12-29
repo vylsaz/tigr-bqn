@@ -252,6 +252,11 @@ error ⇐ void "tigrError"_ffi⟨bmp, Ptr char, Ptr char⟩
 
 Time ⇐ c.Time
 
+Error ⇐ {
+    w ← 𝕨 ⊣ {bmp ⇐ null}    
+    c.Error⟨w.bmp, ToCstr"%s", ToCstr 𝕩⟩
+}
+
 ToCstr ← {(•ToUTF8 𝕩)∾@}
 
 memcpyI32 ← "memcpy"_ffiWith_@ ⟨Out i32, Ptr asI8, u64⟩
