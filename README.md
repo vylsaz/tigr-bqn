@@ -33,7 +33,8 @@ Returns a bitmap object.
 ```bqn
 (flag) Func tigr._WithWindow_ title size
 ```
-Calls `Func` until user closes the window or presses ESC. Then deletes the window.
+Calls `Func` with a new window until user closes the window or presses ESC.
+Then deletes the window.
 - flag: `0` if omitted.
 
 ```bqn
