@@ -75,5 +75,5 @@ toggles ← ⟨
     }
 
     win.Update@
-}•_while_((¬ win.Closed)∧(¬ win.KeyDown⟜tk.escape))@
+}•_while_{𝕊: (¬ win.Closed @)∧¬ win.KeyDown tk.escape}@
 Free win
