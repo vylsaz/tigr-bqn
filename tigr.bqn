@@ -50,9 +50,19 @@ _ffi ⇐ {𝔽 _ffiWith_ tigrdll}
 
 tPixel ← Struct ⟨"r", "g", "b", "a"⟩Of¨u8
 
-Pixel ← {
-    r‿g‿b: r‿g‿b‿255;
-    𝕩
+Pixel ← {4↑𝕩∾<255}
+
+ToUpper ← {('A'⊸+-⟜'a')⌾((('a'⊸≤∧≤⟜'z')𝕩)⊸/) 𝕩}
+h ← "0123456789ABCDEF"
+Hex2 ← {!∧´16>n ← h⊐ ToUpper 𝕩, +´16‿1×2⥊n}
+
+Hex ⇐ {𝕊⁼ 𝕩: "#"∾⥊⊏⟜h˘⍉16(⌊∘÷˜≍|)𝕩;
+𝕊 h:
+    Hex2˘h⥊˜{
+        8: 4‿2; 4: 4‿1;
+        6: 3‿2; 3: 3‿1;
+        !"wrong length: "∾•Fmt h
+    }≠h ↓˜↩ '#'≡⊑h
 }
 
 tigr ⇐ Struct ⟨
