@@ -259,39 +259,39 @@ Error ⇐ {
 
 ToCstr ← {(•ToUTF8 𝕩)∾@}
 
-memcpyI32 ← "memcpy"_ffiWith_@ ⟨Out i32, Ptr asI8, u64⟩
-memcpyI8 ← "memcpy"_ffiWith_@ ⟨Out i8, Ptr asI8, u64⟩
-memcpyPixel ← "memcpy"_ffiWith_@ ⟨Out tPixel, Ptr asI8, u64⟩
+readI32 ← "memcpy"_ffiWith_@ ⟨Out i32, Ptr asI8, u64⟩
+readI8 ← "memcpy"_ffiWith_@ ⟨Out i8, Ptr asI8, u64⟩
+readPixel ← "memcpy"_ffiWith_@ ⟨Out tPixel, Ptr asI8, u64⟩
+writePixel ← void "memcpy"_ffiWith_@ ⟨Ptr asI8, Ptr tPixel, u64⟩
 
-# From
-# https://github.com/mlochbaum/bqn-libs/blob/master/bignat.bqn
 base ← 2⋆8
-Carry ← {
-    b ← 𝕨 ⊣ 0           # Carry in
-    g ← 𝕩 ≥ base        # Generate
-    p ← 𝕩 = base-1      # Propagate
-    i ← ⌈`∘×⟜(1+↕∘≠)¬p  # Start index of propagation chain
-    a ← i ⊏ gs←b∾g      # Active propagations
-    c ← g ∨ p ∧ a       # Carry from these positions
-    r ← (𝕩 + b»c) - c×base
-    ⟨r, c⊸«⌾⋈b⟩
-}
-_extend ← { 𝕨 𝔽○((𝕨⌈○≠𝕩)⊸↑) 𝕩 }
-Add ← { 0⊸<◶⊣‿∾´ Carry 𝕨 +_extend 𝕩 }
-
-Offset ← {⟨ 8‿'c', 8‿'i' ⟩•bit._cast @+ 𝕨 Add base|𝕩}
+CarryAdd ← {c ← 𝕨, 0{r ← c+𝕩, c ↩ ⌊r÷base, base|r}`𝕩}
+ToSigned ← {⟨ 8‿'c', 8‿'i' ⟩•bit._cast @+ 𝕩}
+Offset ← {ToSigned 𝕨 CarryAdd base|𝕩}
 
 MakeBmp ← {𝕊 bmp:
     !bmp ≢ null
     {
         bmp ⇐ bmp
-        W ⇐ {𝕊: ⊑MemcpyI32 ⟨<0, tigrOffset.w Offset bmp, 4⟩}
-        H ⇐ {𝕊: ⊑MemcpyI32 ⟨<0, tigrOffset.h Offset bmp, 4⟩}
+        W ⇐ {𝕊: ⊑ReadI32 ⟨<0, tigrOffset.w Offset bmp, 4⟩}
+        H ⇐ {𝕊: ⊑ReadI32 ⟨<0, tigrOffset.h Offset bmp, 4⟩}
         Size ⇐ {𝕊: ⟨W@, H@⟩}
-        Pix ⇐ {𝕊:
-            ptr ← MemcpyI8 ⟨null, tigrOffset.pix Offset bmp, ptrSz⟩
-            w‿h ← Size @
-            h‿w⥊MemcpyPixel ⟨h‿w⥊<4⥊0, ptr, w×h×4⟩
+        Pix ← {𝕊: ReadI8 ⟨null, tigrOffset.pix Offset bmp, ptrSz⟩}
+        ReadPix ⇐ {
+            x‿y ← 𝕨 ⊣ 0‿0
+            n ← 𝕩
+            w ← W @, !x<w
+            h ← H @, !y<h
+            off ← x+y×w, !(off+n)≤w×h
+            ReadPixel ⟨n⥊<4⥊0, (4×off) Offset Pix @, 4×n⟩
+        }
+        WritePix ⇐ {
+            x‿y ← 𝕨 ⊣ 0‿0
+            n ← ≠𝕩
+            w ← W @, !x<w
+            h ← H @, !y<h
+            off ← x+y×w, !(off+n)≤w×h
+            WritePixel ⟨(4×off) Offset Pix @, 𝕩, 4×n⟩
         }
 
         Closed ⇐ {𝕊: 0≠c.Closed bmp}
