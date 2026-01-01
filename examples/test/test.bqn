@@ -19,6 +19,9 @@ screen ← "test" tigr.Window 320‿240
     screen.Update@
 }•_while_((¬ screen.Closed)∧(¬ screen.KeyDown⟜tigr.key.escape))@
 
-screen.Error "test error function!"
+{ 0=≠•args?
+    screen.Error "test error function!"
+;@
+}
 
 tigr.Free screen

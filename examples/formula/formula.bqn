@@ -60,6 +60,6 @@ Frame ← { 𝕊:
     ctx.Update @
 }
 
-Frame •_while_ (¬ ctx.Closed) @
+Frame •_while_ ((¬ ctx.Closed)∧(¬ ctx.KeyDown⟜tigr.key.escape)) @
 
 tigr.Free ctx
