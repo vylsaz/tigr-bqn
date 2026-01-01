@@ -287,7 +287,7 @@ MakeBmp ← {𝕊 bmp:
         }
         WritePix ⇐ {
             x‿y ← 𝕨 ⊣ 0‿0
-            n ← ≠𝕩
+            n ← ×´≢𝕩
             w ← W @, !x<w
             h ← H @, !y<h
             off ← x+y×w, !(off+n)≤w×h
@@ -341,12 +341,10 @@ _WindowWithFlag ⇐ {title Flag _𝕣 size:
     MakeBmp c.Window size∾⟨ToCstr title, flag⟩
 }
 Window ⇐ {𝕨 0 _WindowWithFlag 𝕩}
-_WithWindow_ ⇐ {𝔽 _𝕣_ 𝔾 𝕩: 0 𝕊 𝕩;
-flag Func _𝕣_ Title size:
-    w ← MakeBmp c.Window size∾⟨ToCstr title, flag⟩
-    r ← (Func W) •_while_((¬ w.Closed)∧(¬ w.KeyDown⟜key.escape)) @
-    Free w, r
-}
+With ⇐ {
+    r ← (𝕏 𝕎)•_while_((¬ 𝕨.Closed)∧(¬ 𝕨.KeyDown⟜key.escape)) @
+    Free 𝕨, r
+}´
 
 Bitmap ⇐ {𝕊 size:
     MakeBmp c.Bitmap size

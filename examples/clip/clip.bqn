@@ -7,7 +7,7 @@ c1 ← 255‿255‿255
 c2 ← 100‿200‿100
 c3 ← 100‿100‿200‿150
 
-{𝕊 win: 
+tigr.With ("Clip" tigr.Window 320‿240)‿{𝕊 win: 
     win.Clear c0
 
     c ← ⌊0.5×win.Size@
@@ -28,4 +28,4 @@ c3 ← 100‿100‿200‿150
     c2 win tfont._Print_ msg ⟨0,d⟩+c-⌊0.5×sz
 
     win.Update@
-}tigr._WithWindow_"Clip" 320‿240 
+}

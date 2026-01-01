@@ -31,13 +31,6 @@ Returns a bitmap object.
 `tigr.Window` is equal to `0 tigr._WindowWithFlag`.
 
 ```bqn
-(flag) Func tigr._WithWindow_ title size
-```
-Calls `Func` with a new window until user closes the window or presses ESC.
-Then deletes the window.
-- flag: `0` if omitted.
-
-```bqn
 bmp ← tigr.Bitmap size
 ```
 Creates an empty off-screen bitmap.
@@ -46,6 +39,12 @@ Creates an empty off-screen bitmap.
 tigr.Free bmp
 ```
 Deletes a window/bitmap.
+
+```bqn
+tigr.With bmp‿Func
+```
+Calls `Func` with bmp until user closes the window or presses ESC.
+Then deletes the window.
 
 ```bqn
 bmp.W @
