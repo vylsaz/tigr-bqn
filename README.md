@@ -43,8 +43,8 @@ Deletes a window/bitmap.
 ```bqn
 tigr.With bmp‿Func
 ```
-Calls `Func` with bmp until user closes the window or presses ESC.
-Then deletes the window.
+Calls `Func` with window/bitmap until user closes the window or presses ESC.
+Then frees the window.
 
 ```bqn
 bmp.W @
@@ -54,10 +54,10 @@ bmp.Size @
 Get the size (unscaled) of the bitmap object. `Size@` is `⟨W@, H@⟩`.
 
 ```bqn
-pix ← (⟨x, y⟩) bmp.ReadPix n
-(⟨x, y⟩) bmp.WritePix ⟨⟨r, g, b, a⟩, ...⟩
+pix ← (x‿y) bmp.ReadPix n
+(x‿y) bmp.WritePix ⟨⟨r, g, b, a⟩, ...⟩
 ```
-Access the `pix` of bitmap object directly. If `⟨x, y⟩` is omitted, use `⟨0, 0⟩`.
+Access the `pix` of bitmap object directly. If `x‿y` is omitted, use `⟨0, 0⟩`.
 
 ```bqn
 isClosed ← bmp.Closed @
@@ -100,7 +100,7 @@ The built-in post-FX shader uses the following parameters:
 pixel ← bmp.Get ⟨x, y⟩
 ```
 Helper for reading pixels.
-For high performance, just access `bmp.ReadPix` directly.
+For high performance, just use `bmp.ReadPix` directly.
 - pixel: `⟨r, g, b, a⟩` (when a pixel is accepted as an input, you can omit `a` and use the default (`255`))
 
 ```bqn
@@ -108,7 +108,7 @@ pixel bmp.Plot ⟨x, y⟩
 ```
 Plots a pixel.
 Clips and blends.
-For high performance, just access `bmp.WritePix` directly.
+For high performance, just use `bmp.WritePix` directly.
 
 ```bqn
 bmp.Clear color
