@@ -16,9 +16,9 @@ Struct ← {𝕊 defs:
     Of ⇐ {o ← ⊑f⊐<𝕩, ("no field "∾•Fmt 𝕩)!o<≠f, o}
 }
 
-asI8 ← {t ⇐ ":i8"}
-ptrSz ← 8
-null ← ptrSz⥊0
+null ← •foreign.null
+nullI8 ← null.Cast "i8"
+IsNotNull ← { 0≠nullI8.Sub 𝕩.Cast "i8" }
 
 Of ← ⋈
 
@@ -71,25 +71,13 @@ Hex ⇐ {𝕊⁼ 𝕩: "#"∾⥊⊏⟜h˘⍉16(⌊∘÷˜≍|)𝕩;
     }≠h ↓˜↩ '#'≡⊑h
 }
 
-# tigr ⇐ Struct ⟨
-#     "w"Of i32, "h"Of i32
-#     "cx"Of i32, "cy"Of i32, "cw"Of i32, "ch"Of i32
-#     "pix"Of Ptr tPixel
-#     "handle"Of Ptr void
-#     "blitMode"Of i32
-# ⟩
-tigr ← asI8
-tigrOffset ← {
-    w ⇐ 0
-    h ⇐ 4
-    cx ⇐ 8
-    cy ⇐ 12
-    cw ⇐ 16
-    ch ⇐ 20
-    pix ⇐ 24
-    handle ⇐ 32
-    blitMode ⇐ 40
-}
+tigr ⇐ Struct ⟨
+    "w"Of i32, "h"Of i32
+    "cx"Of i32, "cy"Of i32, "cw"Of i32, "ch"Of i32
+    "pix"Of Ptr tPixel
+    "handle"Of Ptr void
+    "blitMode"Of i32
+⟩
 
 flag ⇐ {
     fixed ⇐ 0
@@ -259,31 +247,21 @@ Error ⇐ {
 
 ToCstr ← {(•ToUTF8 𝕩)∾@}
 
-readI32 ← "memcpy"_ffiWith_@ ⟨Out i32, Ptr asI8, u64⟩
-readI8 ← "memcpy"_ffiWith_@ ⟨Out i8, Ptr asI8, u64⟩
-readPixel ← "memcpy"_ffiWith_@ ⟨Out tPixel, Ptr asI8, u64⟩
-writePixel ← void "memcpy"_ffiWith_@ ⟨Ptr asI8, Ptr tPixel, u64⟩
-
-base ← 2⋆8
-CarryAdd ← {c ← 𝕨, 0{r ← c+𝕩, c ↩ ⌊r÷base, base|r}`𝕩}
-ToSigned ← {⟨ 8‿'c', 8‿'i' ⟩•bit._cast @+ 𝕩}
-Offset ← {ToSigned 𝕨 CarryAdd base|𝕩}
-
 MakeBmp ← {𝕊 bmp:
-    !bmp ≢ null
+    !IsNotNull bmp
     {
         bmp ⇐ bmp
-        W ⇐ {𝕊: ⊑ReadI32 ⟨<0, tigrOffset.w Offset bmp, 4⟩}
-        H ⇐ {𝕊: ⊑ReadI32 ⟨<0, tigrOffset.h Offset bmp, 4⟩}
+        W ⇐ {𝕊: (bmp.Field tigr.Of"w").Read 0}
+        H ⇐ {𝕊: (bmp.Field tigr.Of"h").Read 0}
         Size ⇐ {𝕊: ⟨W@, H@⟩}
-        Pix ← {𝕊: ReadI8 ⟨null, tigrOffset.pix Offset bmp, ptrSz⟩}
+        Pix ← {𝕊: (bmp.Field tigr.Of"pix").Read 0}
         ReadPix ⇐ {
             x‿y ← 𝕨 ⊣ 0‿0
             n ← 𝕩
             w ← W @, !x<w
             h ← H @, !y<h
             off ← x+y×w, !(off+n)≤w×h
-            ReadPixel ⟨n⥊<4⥊0, (4×off) Offset Pix @, 4×n⟩
+            ((Pix@).Add off).ReadList n
         }
         WritePix ⇐ {
             x‿y ← 𝕨 ⊣ 0‿0
@@ -291,7 +269,7 @@ MakeBmp ← {𝕊 bmp:
             w ← W @, !x<w
             h ← H @, !y<h
             off ← x+y×w, !(off+n)≤w×h
-            WritePixel ⟨(4×off) Offset Pix @, 𝕩, 4×n⟩
+            ((Pix@).Add off).WriteList ⥊𝕩
         }
 
         Closed ⇐ {𝕊: 0≠c.Closed bmp}
@@ -358,6 +336,7 @@ LoadImageMem ⇐ {𝕊 mem:
 
 LoadFont ⇐ {cp 𝕊 bmp:
     f ← c.LoadFont⟨bmp.bmp, cp⟩
+    !IsNotNull f
     {
         f ⇐ f
         _Print_ ⇐ {color Bmp _𝕣_ Msg coord:
@@ -390,20 +369,8 @@ dstCoord Dst _𝕣_ Src‿Tint srcCoord:
 }
 
 tfont ⇐ {
-    handle ← Ptr void
-    p ← {
-    "windows":
-        dll ← ToCstr {'\'¨⌾(('/'=𝕩)⊸/)𝕩}tigrdll
-        getModuleHandleA ← handle "GetModuleHandleA"_ffiWith_@ Ptr char
-        getProcAddress ← (Ptr c.font) "GetProcAddress"_ffiWith_@ ⟨handle, Ptr char⟩
-        GetProcAddress ⟨GetModuleHandleA dll, ToCstr"tfont"⟩
-    ;
-        rtld_now ← 2
-        dlopen ← handle "dlopen"_ffiWith_@ ⟨Ptr char, i32⟩
-        dlsym ← (Ptr c.font) "dlsym"_ffiWith_@ ⟨handle, Ptr char⟩
-        DlSym⟨DlOpen⟨ToCstr tigrdll, rtld_now⟩, ToCstr"tfont"⟩
-    }•platform.os
-    f ← p.Read 0
+    f ← tigrdll •foreign.Value c.font.t‿"tfont"
+    !IsNotNull f
     {
         _Print_ ⇐ {color Bmp _𝕣_ Msg coord:
             c.Print⟨bmp.bmp, f⟩∾coord∾⟨Pixel color, ToCstr"%s", ToCstr msg⟩
