@@ -1,15 +1,15 @@
 ⟨Window, Free, tk ⇐ key, tfont⟩ ← •Import "../../tigr.bqn"
 
 gl ← {
-"windows":
     color_buffer_bit ⇐ 16384
-    loadLibrary ← @•FFI ⟨"*", "LoadLibraryA", "*i8:c8"⟩
-    LoadLibrary ⟨"Opengl32.dll"∾@⟩
-    clear ⇐ @•FFI ⟨"", "glClear", "u32"⟩
-    clearColor ⇐ @ •FFI ⟨"", "glClearColor","f32","f32","f32","f32"⟩
-;
-    !"TODO: load opengl"
-}•platform.os
+    dll ← {
+        "windows": "Opengl32.dll";
+        "linux": "libGL.so.1";
+        !"TODO: load opengl"
+    }•platform.os
+    clear ⇐ ↑‿dll •FFI ⟨"", "glClear", "u32"⟩
+    clearColor ⇐ ↑‿dll •FFI ⟨"", "glClearColor","f32","f32","f32","f32"⟩
+}
 
 win1 ← "Window1" Window 320‿240
 win2 ← "Window2" Window 320‿240

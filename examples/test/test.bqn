@@ -6,7 +6,7 @@ Num ← {'-'¨⌾(('¯'=f)⊸/)f ← •Fmt 𝕩}
 screen ← "test" tigr.Window 320‿240
 
 {𝕊: 
-    screen.Clear 25‿25‿25
+    screen.WritePix {255∾˜•rand.Range¨𝕩}¨(screen.Size@)⥊<3⥊25
     255‿255‿255 screen font._Print_{
         x‿y ← screen.ScrollWheel @
         "scroll x="∾(Num x)∾", y="∾Num y
