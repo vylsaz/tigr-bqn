@@ -193,7 +193,7 @@ Codepages:
 
 - ascii: Regular 7-bit ASCII
 - cp_1252: Windows 1252
-- Tutf32: Unicode subset
+- utf32: Unicode subset
 
 For ASCII and 1252, the font bitmap should contain all characters
 for the given codepage, excluding the first 32 control codes.
